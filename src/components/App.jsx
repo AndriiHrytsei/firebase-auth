@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
-import { db } from "../config/firebase";
+import { auth, db } from "../config/firebase";
 import "./App.css";
 import Auth from "./auth";
-import { getDocs, collection, addDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 
 function App() {
   const [movieList, setMovieList] = useState([]);
   const [newMovieTitle, setNewMovieTitle] = useState("");
   const [newReleaseDate, setNewReleaseDate] = useState(0);
   const [newReceivedAnOscar, setNewReceivedAnOscar] = useState(false);
-
   const movieCollectionRef = collection(db, "movies");
 
-  
+  const [updatedTitle, setUpdatedTitle] = useState("");
+
   const getMovieList = async () => {
     try {
       const data = await getDocs(movieCollectionRef);
@@ -25,30 +32,37 @@ function App() {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getMovieList();
   }, []);
 
-  
   const onSubmitMovie = async () => {
     try {
       await addDoc(movieCollectionRef, {
         title: newMovieTitle,
         releaseDate: newReleaseDate,
         receivedAnOscar: newReceivedAnOscar,
+        userId: auth?.currentUser?.uid,
       });
       getMovieList();
     } catch (error) {
       console.log(error);
     }
   };
-  
+
   const deleteMovie = async (id) => {
-    const movieDoc = doc(db, "movies", id)
-    await deleteDoc(movieDoc)
+    const movieDoc = doc(db, "movies", id);
+    await deleteDoc(movieDoc);
     getMovieList();
-  }
-  
+  };
+
+  const updateMovieTitle = async (id) => {
+    const movieDoc = doc(db, "movies", id);
+    await updateDoc(movieDoc, { title: updatedTitle });
+    getMovieList();
+  };
+
   return (
     <>
       <div>Firebase auth</div>
@@ -77,12 +91,22 @@ function App() {
       </div>
       <div>
         {movieList.map((movie) => (
-          <div key={movie.title}>
-            <h1 style={{ color: movie.receivedAnOscar ? "yellow" : "black" }}>
+          <div key={movie.id}>
+            <h1 style={{ color: movie.receivedAnOscar ? "green" : "black" }}>
               {movie.title}
             </h1>
             <p>Release date: {movie.releaseDate}</p>
-            <button type="button" onClick={() => deleteMovie(movie.id)}>Delete movie</button>
+            <button type="button" onClick={() => deleteMovie(movie.id)}>
+              Delete movie
+            </button>
+            <input
+              type="text"
+              placeholder="New title..."
+              onChange={(e) => setUpdatedTitle(e.currentTarget.value)}
+            />
+            <button type="button" onClick={() => updateMovieTitle(movie.id)}>
+              Update title
+            </button>
           </div>
         ))}
       </div>
