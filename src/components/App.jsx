@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth, db, storage } from "../config/firebase";
 import "./App.css";
-import Auth from "./auth";
+import Auth from "./auth.jsx";
 import {
   getDocs,
   collection,
@@ -38,6 +38,7 @@ function App() {
 
   useEffect(() => {
     getMovieList();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmitMovie = async () => {
