@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "../config/firebase";
+import { auth, db, storage } from "../config/firebase";
 import "./App.css";
 import Auth from "./auth";
 import {
@@ -10,6 +10,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
 
 function App() {
   const [movieList, setMovieList] = useState([]);
@@ -19,6 +20,8 @@ function App() {
   const movieCollectionRef = collection(db, "movies");
 
   const [updatedTitle, setUpdatedTitle] = useState("");
+
+  const [fileUpload, setFileUpload] = useState(null)
 
   const getMovieList = async () => {
     try {
@@ -62,6 +65,16 @@ function App() {
     await updateDoc(movieDoc, { title: updatedTitle });
     getMovieList();
   };
+
+  const uploadFile = async () => {
+    if (!fileUpload) return
+    const filesFolderRef = ref(storage, `projectFiles/${fileUpload.name}`);
+    try {
+      await uploadBytes(filesFolderRef, fileUpload)
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   return (
     <>
@@ -109,6 +122,10 @@ function App() {
             </button>
           </div>
         ))}
+      </div>
+      <div>
+        <input type="file" onChange={(e) => setFileUpload(e.currentTarget.files[0])}/>
+        <button type="button" onClick={uploadFile}>Upload file</button>
       </div>
     </>
   );
